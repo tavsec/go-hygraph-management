@@ -93,7 +93,7 @@ func (w *Webhooks) ListWebhooks(c Client, projectId string) (Webhooks, error) {
             }
         }
     }`,
-		map[string]string{"projectId": projectId}, &webhooks)
+		map[string]interface{}{"projectId": projectId}, &webhooks)
 
 	return webhooks.Viewer.Project.Environment.Webhooks, err
 }
@@ -140,7 +140,97 @@ func (w *Webhooks) GetWebhook(c Client, projectId, webhookId string) (Webhook, e
             }
         }
     }`,
-		map[string]string{"projectId": projectId, "webhookId": webhookId}, &webhook)
+		map[string]interface{}{"projectId": projectId, "webhookId": webhookId}, &webhook)
 
 	return webhook.Viewer.Project.Environment.Webhook, err
+}
+
+type CreateWebhookInput struct {
+	TriggerType    string            `json:"triggerType"`
+	TriggerActions []string          `json:"triggerActions"`
+	IncludePayload bool              `json:"includePayload"`
+	Name           string            `json:"name"`
+	Description    string            `json:"description"`
+	URL            string            `json:"url"`
+	Method         string            `json:"method"`
+	IsActive       bool              `json:"isActive"`
+	Headers        map[string]string `json:"headers"`
+	SecretKey      string            `json:"secretKey"`
+	Models         []string          `json:"models"`
+	Stages         []string          `json:"stages"`
+}
+
+func (w *Webhooks) CreateWebhook(c Client, environmentId string, input CreateWebhookInput) (Webhook, error) {
+	var newWebhook WebhookShowStub
+	err := c.MakeRequest(
+		context.Background(),
+		`mutation ($environmentId: ID!, name: String!, url: String!, method: String!, isActive: Boolean!, headers: JSON!, description: String!, triggerType: String!, triggerActions: [String!]!, secretKey: String!, includePayload: Boolean!){
+  createWebhook(
+    data: {
+      environmentId: $environmentId,
+      name: $name,
+      url: $url,
+      isActive: $isActive
+      includePayload: $includePayload
+      models: $models,
+      stages: $stages
+      triggerType: CONTENT_MODEL,
+      triggerActions: $triggerActions,
+      headers: $headers,
+      description: $description
+      method: $method
+      secretKey: $secretKey
+    }
+  ){
+    createdWebhook{
+
+                  createdAt
+                  createdBy {
+                    ... on Member {
+                      id
+                    }
+                    ... on PermanentAuthToken {
+                      id
+                      name
+                    }
+                  }
+                  description
+                  hasSecretKey
+                  headers
+                  id
+                  isActive
+                  isSystem
+                  method
+                  url
+                  updatedAt
+                  triggerType
+                  triggerSources
+                  triggerActions
+                  name
+                  models {
+                    apiId
+                    apiIdPlural
+                    id
+                  }
+    }
+  }
+}
+`,
+		map[string]interface{}{
+			"environmentId":  environmentId,
+			"name":           input.Name,
+			"url":            input.URL,
+			"method":         input.Method,
+			"isActive":       input.IsActive,
+			"headers":        input.Headers,
+			"description":    input.Description,
+			"triggerType":    input.TriggerType,
+			"triggerActions": input.TriggerActions,
+			"secretKey":      input.SecretKey,
+			"includePayload": input.IncludePayload,
+			"models":         input.Models,
+			"stages":         input.Stages,
+		}, &newWebhook)
+
+	return newWebhook.Viewer.Project.Environment.Webhook, err
 }

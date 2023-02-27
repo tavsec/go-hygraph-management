@@ -34,7 +34,7 @@ func TestClient_MakeRequest(t *testing.T) {
 	var responseData struct {
 		Foo string `json:"foo"`
 	}
-	err := client.MakeRequest(context.Background(), "", map[string]string{"test": "arg"}, &responseData)
+	err := client.MakeRequest(context.Background(), "", map[string]interface{}{"test": "arg"}, &responseData)
 
 	st.Expect(t, err, nil)
 	st.Expect(t, responseData.Foo, "bar")

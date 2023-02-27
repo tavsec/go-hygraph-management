@@ -21,7 +21,7 @@ func NewClient(host, authToken string) (*Client, error) {
 	return &c, nil
 }
 
-func (c *Client) MakeRequest(ctx context.Context, query string, variables map[string]string, responseData interface{}) error {
+func (c *Client) MakeRequest(ctx context.Context, query string, variables map[string]interface{}, responseData interface{}) error {
 	req := graphql.NewRequest(query)
 	req.Header.Add("Authorization", "Bearer "+c.AuthToken)
 	for key, value := range variables {
