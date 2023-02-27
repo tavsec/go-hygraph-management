@@ -39,6 +39,16 @@ type WebhookListStub struct {
 	} `json:"_viewer"`
 }
 
+type WebhookShowStub struct {
+	Viewer struct {
+		Project struct {
+			Environment struct {
+				Webhook Webhook `json:"webhook"`
+			} `json:"environment"`
+		} `json:"project"`
+	} `json:"_viewer"`
+}
+
 type Webhooks []Webhook
 
 func (w *Webhooks) ListWebhooks(c Client, projectId string) (Webhooks, error) {
@@ -86,4 +96,51 @@ func (w *Webhooks) ListWebhooks(c Client, projectId string) (Webhooks, error) {
 		map[string]string{"projectId": projectId}, &webhooks)
 
 	return webhooks.Viewer.Project.Environment.Webhooks, err
+}
+
+func (w *Webhooks) GetWebhook(c Client, projectId, webhookId string) (Webhook, error) {
+	var webhook WebhookShowStub
+	err := c.MakeRequest(
+		context.Background(),
+		`query ($projectId: ID!, $webhookId: ID!) {
+          _viewer {
+            project(id: $projectId) {
+              environment {
+                webhook($id: $webhookId){
+                  createdAt
+                  createdBy {
+                    ... on Member {
+                      id
+                    }
+                    ... on PermanentAuthToken {
+                      id
+                      name
+                    }
+                  }
+                  description
+                  hasSecretKey
+                  headers
+                  id
+                  isActive
+                  isSystem
+                  method
+                  url
+                  updatedAt
+                  triggerType
+                  triggerSources
+                  triggerActions
+                  name
+                  models {
+                    apiId
+                    apiIdPlural
+                    id
+                  }
+                }
+              }
+            }
+        }
+    }`,
+		map[string]string{"projectId": projectId, "webhookId": webhookId}, &webhook)
+
+	return webhook.Viewer.Project.Environment.Webhook, err
 }
