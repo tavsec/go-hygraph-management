@@ -15,9 +15,8 @@ func NewClient(host, authToken string) (*Client, error) {
 	c := Client{
 		GraphQlClient: graphql.NewClient(host),
 		HostURL:       host,
+		AuthToken:     authToken,
 	}
-
-	c.AuthToken = authToken
 
 	return &c, nil
 }
