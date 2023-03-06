@@ -146,7 +146,6 @@ func (w *Webhooks) GetWebhook(c Client, projectId, webhookId string) (Webhook, e
 }
 
 type CreateWebhookInput struct {
-	TriggerType    string            `json:"triggerType"`
 	TriggerActions []string          `json:"triggerActions"`
 	IncludePayload bool              `json:"includePayload"`
 	Name           string            `json:"name"`
@@ -164,7 +163,7 @@ func (w *Webhooks) CreateWebhook(c Client, environmentId string, input CreateWeb
 	var newWebhook WebhookShowStub
 	err := c.MakeRequest(
 		context.Background(),
-		`mutation ($environmentId: ID!, name: String!, url: String!, method: String!, isActive: Boolean!, headers: JSON!, description: String!, triggerType: String!, triggerActions: [String!]!, secretKey: String!, includePayload: Boolean!){
+		`mutation ($environmentId: ID!, $name: String!, $url: String!, $method: WebhookMethod, $isActive: Boolean!, $headers: JSON!, $description: String!, $triggerActions: [WebhookTriggerAction!]!, $secretKey: String!, $includePayload: Boolean!, $models: [ID!]!, $stages: [ID!]!){
   createWebhook(
     data: {
       environmentId: $environmentId,
@@ -224,7 +223,6 @@ func (w *Webhooks) CreateWebhook(c Client, environmentId string, input CreateWeb
 			"isActive":       input.IsActive,
 			"headers":        input.Headers,
 			"description":    input.Description,
-			"triggerType":    input.TriggerType,
 			"triggerActions": input.TriggerActions,
 			"secretKey":      input.SecretKey,
 			"includePayload": input.IncludePayload,
